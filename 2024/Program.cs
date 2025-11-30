@@ -1,4 +1,21 @@
 ﻿using Advent;
 
-IChallenge challenge = new Day1();
-challenge.Run();
+
+Console.WriteLine("Choose challenge day:");
+string? input = Console.ReadLine();
+
+if (int.TryParse(input, out int day)) {
+    IChallenge challenge = PickChallenge(day);
+    challenge.Run();
+}
+else {
+    Console.WriteLine("A valid integer must be entered.");
+}
+
+
+static IChallenge PickChallenge(int day) =>
+    day switch {
+        1 => new Day1(),
+        2 => new Day2(),
+        _ => throw new ArgumentException($"Invalid day {day}.")
+    };

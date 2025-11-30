@@ -29,6 +29,31 @@ public static class Files {
         return lists;
     }
 
+    public static List<List<int>> LoadReactorLevels(string path) {
+        using StreamReader stream = File.OpenText(path);
+        var reactorLevels = LoadReactorLevels(stream);
+        return reactorLevels;
+    }
+
+    public static List<List<int>> LoadReactorLevels(StreamReader stream) {
+        List<List<int>> reactorLevels = [];
+
+        while (!stream.EndOfStream) {
+            string? currLine = stream.ReadLine();
+            if (currLine == null) break;
+
+            string[] splitLine = currLine.Split(' ');
+            List<int> currReport = [];
+
+            foreach (string line in splitLine)
+                currReport.Add(int.Parse(line));
+
+            reactorLevels.Add(currReport);
+        }
+
+        return reactorLevels;
+    }
+
 
     //***
     //*** Internal utility methods.
