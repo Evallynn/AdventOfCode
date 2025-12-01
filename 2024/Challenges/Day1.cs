@@ -3,7 +3,7 @@
 
 public class Day1() : IChallenge {
     // Constants.
-    private const string FILE_PATH = "C:\\Users\\LSTAD\\Documents\\Azure\\AdventOfCode\\2024\\data\\Day1.txt";
+    private const string FILE_PATH = "data/Day1.txt";
 
 
     // External utility methods.

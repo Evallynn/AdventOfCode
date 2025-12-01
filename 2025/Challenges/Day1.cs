@@ -3,7 +3,7 @@
 
 public class Day1() : IChallenge {
     // Constants.
-    private const string FILE_PATH = "C:\\Users\\LSTAD\\Documents\\Azure\\AdventOfCode\\2025\\data\\Day1.txt";
+    private const string FILE_PATH = "data/Day1.txt";
 
 
     // External utility methods.
@@ -11,8 +11,9 @@ public class Day1() : IChallenge {
         var rotations = Files.LoadSafeRotations(FILE_PATH);
 
         SafeOpener opener = new();
-        int totalZeroes = opener.CountZeroes(50, rotations);
+        SafePassword password = opener.CountZeroes(50, rotations);
 
-        Console.WriteLine($"Total Zeroes: {totalZeroes}");
+        Console.WriteLine($"Landed on zero: {password.LandedOnZero}");
+        Console.WriteLine($"Passed zero: {password.PassedZero}");
     }
 }
