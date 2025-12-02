@@ -12,7 +12,6 @@ public class Day2() : IChallenge {
         ProductIdFixer fixer = new();
 
         long totalInvalid = fixer.TotalInvalidProductRanges(ranges);
-
         Console.WriteLine($"Total invalid: {totalInvalid}");
     }
 }

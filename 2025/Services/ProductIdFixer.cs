@@ -14,17 +14,47 @@ public class ProductIdFixer {
         long total = 0;
 
         for (long i = range.Min; i <= range.Max; i++) {
-            // Skip items with an odd number of digits, they can't be split.
-            string idStr = i.ToString();
-            if (idStr.Length % 2 != 0) continue;
-
-            string firstHalf = idStr[..(idStr.Length / 2)];
-            string secondHalf = idStr[(idStr.Length / 2)..];
-
-            if (firstHalf == secondHalf)
+            if (IsInvalidProductId(i))
                 total += i;
         }
 
         return total;
     }
+
+    // Class-internal utilities.
+    private static bool IsInvalidProductId(long id) {
+        string idStr = id.ToString();
+        List<int> lengthDivisors = GetDivisors(idStr.Length);
+
+        foreach (int divisor in lengthDivisors) {
+            if (IsInvalidProductId(idStr, divisor))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsInvalidProductId(string id, int divisor) {
+        string initialChunk = id[..divisor];
+
+        for (int i = divisor; i < id.Length; i += divisor) {
+            string chunk = id.Substring(i, divisor);
+
+            if (initialChunk != chunk) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static List<int> GetDivisors(int input) {
+        List<int> divisors = [];
+
+        for (int i = 1; i < input; i++)
+            if (input % i == 0)
+                divisors.Add(i);
+
+        return divisors;
+    } 
 }

@@ -27,6 +27,6 @@ public class Day2Tests {
 
 
         // Assert.
-        Assert.Equal(1227775554, actual);
+        Assert.Equal(4174379265, actual);
     }
 }
