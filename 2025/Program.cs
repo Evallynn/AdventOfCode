@@ -16,5 +16,6 @@ else {
 static IChallenge PickChallenge(int day) =>
     day switch {
         1 => new Day1(),
+        2 => new Day2(),
         _ => throw new ArgumentException($"Invalid day {day}.")
     };
