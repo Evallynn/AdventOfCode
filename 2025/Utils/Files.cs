@@ -63,4 +63,22 @@ public class Files {
 
         return ranges;
     }
+
+    public static List<string> LoadJoltsFile(string path) {
+        using StreamReader stream = File.OpenText(path);
+        var result = LoadJoltsFile(stream);
+        return result;
+    }
+
+    public static List<string> LoadJoltsFile(StreamReader stream) {
+        List<string> jolts = [];
+
+        while (!stream.EndOfStream) {
+            string? currLine = stream.ReadLine();
+            if (currLine == null) continue;
+            jolts.Add(currLine);
+        }
+
+        return jolts;
+    }
 }
