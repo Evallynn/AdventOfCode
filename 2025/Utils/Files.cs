@@ -81,4 +81,25 @@ public class Files {
 
         return jolts;
     }
+
+    public static bool[,] LoadPaperRolls(string path) {
+        using StreamReader stream = File.OpenText(path);
+        var result = LoadPaperRolls(stream);
+        return result;
+    }
+
+    public static bool[,] LoadPaperRolls(StreamReader stream) {
+        string[] fullFile = stream.ReadToEnd().Split("\r\n");
+        bool[,] rolls = new bool[fullFile.Length, fullFile[0].Length];
+
+        for (int y = 0; y < fullFile.Length; y++)
+            for (int x = 0; x < fullFile[y].Length; x++) {
+                if (fullFile[y][x] != '@' && fullFile[y][x] != '.')
+                    throw new ArgumentException($"Dodgy character at {x},{y}: '{fullFile[y][x]}'");
+
+                rolls[y, x] = fullFile[y][x] == '@';
+            }
+
+        return rolls;
+    }
 }
