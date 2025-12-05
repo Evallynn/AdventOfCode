@@ -102,4 +102,32 @@ public class Files {
 
         return rolls;
     }
+
+    public static Ingredients LoadCafeteriaStock(string path) {
+        using StreamReader stream = File.OpenText(path);
+        var result = LoadCafeteriaStock(stream);
+        return result;
+    }
+
+    public static Ingredients LoadCafeteriaStock(StreamReader stream) {
+        Ingredients ingredients = new();
+
+        while (!stream.EndOfStream) {
+            string? currLine = stream.ReadLine();
+            if (currLine == null || currLine == "") continue;
+
+            int hyphenIndex = currLine.IndexOf('-');
+
+            if (hyphenIndex < 0) {
+                ingredients.AddStock(long.Parse(currLine));
+            }
+            else {
+                long rangeStart = long.Parse(currLine[..hyphenIndex]);
+                long rangeEnd = long.Parse(currLine[(hyphenIndex + 1)..]);
+                ingredients.AddRange(rangeStart, rangeEnd);
+            }
+        }
+
+        return ingredients;
+    }
 }
