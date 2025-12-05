@@ -52,7 +52,7 @@ public class Ingredients {
         }
 
 
-        // Extend an existing range - note we decrement the ID by 'i' to account for the array shrinking as we remove items.
+        // Remove overlapping ranges - note we decrement the ID by 'i' to account for the array shrinking as we remove items.
         for (int i = 0; i < modifiedRangeIds.Count; i++) {
             int id = modifiedRangeIds[i];
             this._freshRanges.RemoveAt(id - i);
