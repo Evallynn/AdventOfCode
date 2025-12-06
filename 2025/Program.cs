@@ -20,5 +20,6 @@ static IChallenge PickChallenge(int day) =>
         3 => new Day3(),
         4 => new Day4(),
         5 => new Day5(),
+        6 => new Day6(),
         _ => throw new ArgumentException($"Invalid day {day}.")
     };

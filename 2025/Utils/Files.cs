@@ -130,4 +130,68 @@ public class Files {
 
         return ingredients;
     }
+
+
+    public static List<MathProblem> LoadCephalopodMath(string path) {
+        using StreamReader stream = File.OpenText(path);
+        var result = LoadCephalopodMath(stream);
+        return result;
+    }
+
+    public static List<MathProblem> LoadCephalopodMath(StreamReader stream) {
+        // FIXME - Absolutely certain there's a neater way to do this, but I don't have time right now.
+        // Create a list we can return problems in.
+        List<MathProblem> problems = [];
+
+
+        // Read all of the lines in upfront, but then traverse them with x/y flipped.
+        string[] lines = stream.ReadToEnd().Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+        List<string> parsedLines = [];
+        OPERATION? operation = null;
+
+        for (int y = 0; y < lines[0].Length; y++) {
+            bool blankLine = true;
+            string line = "";
+
+            for (int x = 0; x < lines.Length; x++) {
+                char currChar = lines[x][y];
+
+                if (currChar == ' ') continue;
+
+                if (char.IsDigit(currChar))
+                    line += currChar;
+                else if (currChar == '+')
+                    operation = OPERATION.ADD;
+                else if (currChar == '*')
+                    operation = OPERATION.MULTIPLY;
+                else
+                    throw new FileLoadException($"Invalid character '{currChar}' found at [{x},{y}].");
+
+                blankLine = false;
+            }
+
+            if (blankLine) {
+                MathProblem problem = new();
+                parsedLines.ForEach(i => problem.AddValue(int.Parse(i)));
+                problem.Operation = operation!.Value;
+
+                problems.Add(problem);
+                parsedLines.Clear();
+                operation = null;
+            }
+            else
+                parsedLines.Add(line);
+        }
+
+
+        // Add the final line.
+        MathProblem finalProblem = new();
+        parsedLines.ForEach(i => finalProblem.AddValue(int.Parse(i)));
+        finalProblem.Operation = operation!.Value;
+        problems.Add(finalProblem);
+
+
+        // Pass back the completed list.
+        return problems;
+    }
 }
