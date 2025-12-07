@@ -194,4 +194,51 @@ public class Files {
         // Pass back the completed list.
         return problems;
     }
+
+    public static TachyonManifold LoadTachyonManifolds(string path) {
+        using StreamReader stream = File.OpenText(path);
+        var result = LoadTachyonManifolds(stream);
+        return result;
+    }
+
+    public static TachyonManifold LoadTachyonManifolds(StreamReader stream) {
+        // Pull the first line to establish start positions and line width.
+        string firstLine = stream.ReadLine()!;
+        List<bool> startPos = [];
+
+        foreach (char c in firstLine) {
+            if (c == '.') startPos.Add(false);
+            else if (c == 'S') startPos.Add(true);
+        }
+
+        TachyonManifold manifolds = new(startPos.Count);
+        manifolds.SetStarts([..startPos]);
+
+
+        // Process the remaining lines to add in the reflectors.
+        while (!stream.EndOfStream) {
+            string? currLine = stream.ReadLine();
+            if (currLine is null) continue;
+
+            bool[] manifoldLocations = new bool[startPos.Count];
+            int manifoldCount = 0;
+
+            foreach (char c in currLine) {
+                if (c == '.') {
+                    manifoldLocations[manifoldCount] = false;
+                    manifoldCount++;
+                }
+                else if (c == '^') {
+                    manifoldLocations[manifoldCount] = true;
+                    manifoldCount++;
+                }
+            }
+
+            manifolds.AddRow(manifoldLocations);
+        }
+
+
+        // Pass back the result.
+        return manifolds;
+    }
 }
