@@ -212,7 +212,7 @@ public class Files {
         }
 
         TachyonManifold manifolds = new(startPos.Count);
-        manifolds.SetStarts([..startPos]);
+        manifolds.SetStarts([.. startPos]);
 
 
         // Process the remaining lines to add in the reflectors.
@@ -240,5 +240,31 @@ public class Files {
 
         // Pass back the result.
         return manifolds;
+    }
+
+    public static List<Vector3> LoadJunctionBoxes(string path) {
+        using StreamReader stream = File.OpenText(path);
+        var result = LoadJunctionBoxes(stream);
+        return result;
+    }
+
+    public static List<Vector3> LoadJunctionBoxes(StreamReader stream) {
+        List<Vector3> boxes = [];
+
+        while (!stream.EndOfStream) {
+            string currLine = stream.ReadLine() ?? "";
+            string[] splitLine = currLine.Split(',');
+
+            if (splitLine.Length != 3)
+                throw new FileLoadException($"Unable to split the following line into three integer positions: '{currLine}'");
+
+            boxes.Add(new(
+                int.Parse(splitLine[0]),
+                int.Parse(splitLine[1]),
+                int.Parse(splitLine[2])
+            ));
+        }
+
+        return boxes;
     }
 }
