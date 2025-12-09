@@ -267,4 +267,32 @@ public class Files {
 
         return boxes;
     }
+
+    public static List<Vector2> LoadTiles(string path) {
+        using StreamReader stream = File.OpenText(path);
+        var result = LoadTiles(stream);
+        return result;
+    }
+
+    public static List<Vector2> LoadTiles(StreamReader stream) {
+        List<Vector2> tiles = [];
+
+        while (!stream.EndOfStream) {
+            string? currLine = stream.ReadLine();
+            if (currLine is null) continue;
+
+            string[] splitLine = currLine.Split(',');
+            if (splitLine.Length != 2)
+                throw new FileLoadException($"Line could not be split into a Vector2: '{currLine}'.");
+
+            Vector2 newPos = new(
+                int.Parse(splitLine[0]),
+                int.Parse(splitLine[1])
+            );
+
+            tiles.Add(newPos);
+        }
+
+        return tiles;
+    }
 }

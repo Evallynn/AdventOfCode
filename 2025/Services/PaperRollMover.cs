@@ -1,7 +1,5 @@
 ﻿namespace Advent;
 
-public record Vector2(int x, int y);
-
 
 public class PaperRollMover(bool _debug = false) {
     // External utility methods.
