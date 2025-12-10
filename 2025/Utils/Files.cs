@@ -295,4 +295,57 @@ public class Files {
 
         return tiles;
     }
+
+    public static List<MachineSchematic> LoadMachineSchematics(string path) {
+        using StreamReader stream = File.OpenText(path);
+        var result = LoadMachineSchematics(stream);
+        return result;
+    }
+
+    public static List<MachineSchematic> LoadMachineSchematics(StreamReader stream) {
+        List<MachineSchematic> schematics = [];
+
+        while (!stream.EndOfStream) {
+            // Skip empty lines.
+            string? currLine = stream.ReadLine();
+            if (currLine is null) continue;
+
+
+            // Read in the raw component strings.
+            string targetStateStr = currLine[(currLine.IndexOf('[') + 1)..currLine.LastIndexOf(']')];
+            string switchesStr = currLine[currLine.IndexOf('(')..(currLine.LastIndexOf(')') + 1)];
+            string joltagesStr = currLine[(currLine.IndexOf('{') + 1)..currLine.LastIndexOf('}')];
+
+
+            // Process the target states and use them to create the initial schematic.
+            bool[] targetState = new bool[targetStateStr.Length];
+            for (int i = 0; i < targetStateStr.Length; i++)
+                targetState[i] = targetStateStr[i] == '#';
+
+            MachineSchematic schematic = new(targetState);
+
+
+            // Process the switches.
+            foreach (string switchStr in switchesStr.Split( )) {
+                string[] affectedValuesStr = switchStr.TrimStart('(').TrimEnd(')').Split(",");
+                int[] affectedValues = new int[affectedValuesStr.Length];
+
+                for (int i = 0; i < affectedValuesStr.Length; i++)
+                    affectedValues[i] = int.Parse(affectedValuesStr[i]);
+
+                schematic.AddSwitch(affectedValues);
+            }
+
+
+            // Process the joltages.
+            foreach (string joltageStr in joltagesStr.Split(','))
+                schematic.AddJoltage(int.Parse(joltageStr));
+
+
+            // Store the completed schematic.
+            schematics.Add(schematic);
+        }
+
+        return schematics;
+    }
 }
