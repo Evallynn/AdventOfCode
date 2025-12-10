@@ -7,38 +7,11 @@ public class MachineStarter(int _maxDepth, bool _debug = false) {
         List<long> maxSteps = [];
 
         foreach (MachineSchematic schematic in schematics) {
-            // Create the root node.
             bool[] state = new bool[schematic.TargetState.Length];
-            MachineNode root = new(0, state);
+            MachineNodeBinary root = new(0, state);
 
-
-            // Process a queue of nodes, effectively doing a breadth-first search for solutions.
-            Queue<MachineNode> nodesToProcess = [];
-            nodesToProcess.Enqueue(root);
-
-            while (nodesToProcess.Count > 0) {
-                // Pop the current node and check if we've reached the depth limit.
-                MachineNode currNode = nodesToProcess.Dequeue();
-                if (currNode.Depth >= _maxDepth) {
-                    if (_debug) Console.WriteLine($"Solution {schematic} hit max depth of {_maxDepth} for path {currNode.GetTransformPath()}.");
-                    break;
-                }
-
-                // Check if the current node is solved.
-                if (currNode.IsSolved(schematic.TargetState)) {
-                    if (_debug) {
-                        Console.WriteLine($"Found solution {schematic} at depth {currNode.Depth}: {currNode.GetTransformPath()}.");
-                    }
-                    maxSteps.Add(currNode.Depth);
-                    break;
-                }
-
-                // Otherwise, create all the child nodes and add them to the queue.
-                foreach (var transform in schematic.Transforms) {
-                    MachineNode child = currNode.AddChild(transform);
-                    nodesToProcess.Enqueue(child);
-                }
-            }
+            long? shortest = ConfigureSchematic(root, schematic.Transforms, schematic.TargetState);
+            if (shortest.HasValue) maxSteps.Add(shortest.Value);
         }
 
         return maxSteps.Sum();
@@ -46,6 +19,50 @@ public class MachineStarter(int _maxDepth, bool _debug = false) {
 
 
     public long ConfigureJoltage(List<MachineSchematic> schematics) {
-        return 0;
+        List<long> maxSteps = [];
+
+        foreach (MachineSchematic schematic in schematics) {
+            int[] state = new int[schematic.TargetState.Length];
+            MachineNodeJoltage root = new(0, state);
+
+            long? shortest = ConfigureSchematic(root, schematic.Transforms, [..schematic.Joltages]);
+            if (shortest.HasValue) maxSteps.Add(shortest.Value);
+        }
+
+        return maxSteps.Sum();
     }
+
+
+    // Class-internal utility methods.
+    private long? ConfigureSchematic<T>(IMachineNode<T> root, List<int[]> transforms, T[] target) {
+        // Process a queue of nodes, effectively doing a breadth-first search for solutions.
+        Queue<IMachineNode<T>> nodesToProcess = [];
+        nodesToProcess.Enqueue(root);
+
+        while (nodesToProcess.Count > 0) {
+            // Pop the current node and check if we've reached the depth limit.
+            IMachineNode<T> currNode = nodesToProcess.Dequeue();
+            if (currNode.Depth >= _maxDepth) {
+                if (_debug) Console.WriteLine($"Solution [{string.Join(',', target)}] hit max depth of {_maxDepth} for path {currNode.GetTransformPath()}.");
+                break;
+            }
+
+            // Check if the current node is solved.
+            if (currNode.IsSolved(target)) {
+                if (_debug) {
+                    Console.WriteLine($"Found solution [{string.Join(',', target)}] at depth {currNode.Depth}: {currNode.GetTransformPath()}.");
+                }
+                return currNode.Depth;
+            }
+
+            // Otherwise, create all the child nodes and add them to the queue.
+            foreach (var transform in transforms) {
+                IMachineNode<T> child = currNode.AddChild(transform);
+                nodesToProcess.Enqueue(child);
+            }
+        }
+
+        // If we got here, then we failed to find a solution in the required depth or somehow ran out of nodes.
+        return null;
+    } 
 }

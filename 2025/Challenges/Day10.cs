@@ -9,12 +9,13 @@ public class Day10 : IChallenge {
     // External utility methods.
     public void Run() {
         List<MachineSchematic> schematics = Files.LoadMachineSchematics(FILE_PATH);
-        MachineStarter starter = new(10, false);
 
-        long totalMinSteps = starter.ConfigureMachine(schematics);
+        MachineStarter starterA = new(10, true);
+        long totalMinSteps = starterA.ConfigureMachine(schematics);
         Console.WriteLine($"Total minimum steps (start-up): {totalMinSteps}");
 
-        long totalJoltageSteps = starter.ConfigureJoltage(schematics);
+        MachineStarter starterB = new(10, true);
+        long totalJoltageSteps = starterB.ConfigureJoltage(schematics);
         Console.WriteLine($"Total minimum steps (joltage): {totalJoltageSteps}");
     }
 }
