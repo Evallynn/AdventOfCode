@@ -3,13 +3,13 @@
 
 public class MachineSchematic(bool[] _targetState) {
     // Class properties.
-    public List<int> Joltages { get; } = [];
+    public List<short> Joltages { get; } = [];
     public bool[] TargetState { get; } = _targetState;
     public List<int[]> Transforms { get; } = [];
 
 
     // External utility methods.
-    public void AddJoltage(int joltage) => this.Joltages.Add(joltage);
+    public void AddJoltage(short joltage) => this.Joltages.Add(joltage);
 
     public void AddSwitch(params int[] affectedValues) {
         if (affectedValues.Any(i => i < 0 || i >= this.TargetState.Length))

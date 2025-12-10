@@ -14,7 +14,7 @@ public class Day10Tests {
         using StreamReader reader = new(stream);
 
         List<MachineSchematic> schematics = Files.LoadMachineSchematics(reader);
-        MachineStarter sut = new(6, true);
+        MachineStarter sut = new(6, 10000, true);
 
 
         // Act.
@@ -35,7 +35,7 @@ public class Day10Tests {
         using StreamReader reader = new(stream);
 
         List<MachineSchematic> schematics = Files.LoadMachineSchematics(reader);
-        MachineStarter sut = new(12, true);
+        MachineStarter sut = new(20, 10000, true);
 
 
         // Act.

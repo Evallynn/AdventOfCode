@@ -339,7 +339,7 @@ public class Files {
 
             // Process the joltages.
             foreach (string joltageStr in joltagesStr.Split(','))
-                schematic.AddJoltage(int.Parse(joltageStr));
+                schematic.AddJoltage(short.Parse(joltageStr));
 
 
             // Store the completed schematic.

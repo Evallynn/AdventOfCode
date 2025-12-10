@@ -8,6 +8,7 @@ public interface IMachineNode<T> {
     public bool IsSolved(T[] target);
     public IMachineNode<T> AddChild(int[] transform);
     public string GetTransformPath();
+    public int? GetHeuristic(T[] target);
 }
 
 
@@ -17,15 +18,13 @@ public abstract class MachineNodeBase<T>(int _depth, T[] _state, int[]? transfor
     public T[] State { get; private init; } = _state;
 
     protected List<MachineNodeBase<T>> Children { get; } = [];
-    protected MachineNodeBase<T>? Parent = null;
-
-
-    // Class-internal variables.
-    private int[]? _transform = transform;
+    protected MachineNodeBase<T>? Parent { get; set; } = null;
+    protected int[]? Transform { get; } = transform;
 
 
     // Abstract methods.
     public abstract IMachineNode<T> AddChild(int[] transform);
+    public abstract int? GetHeuristic(T[] target);
 
 
     // External utility methods.
@@ -40,12 +39,12 @@ public abstract class MachineNodeBase<T>(int _depth, T[] _state, int[]? transfor
     }
 
     public string GetTransformPath() {
-        string transformStr = $"({string.Join(',', this._transform ?? [])})";
+        string transformStr = $"({string.Join(',', this.Transform ?? [])})";
         MachineNodeBase<T>? node = this.Parent;
 
         while (node is not null) {
-            if (node._transform is not null)
-                transformStr = $"({string.Join(',', node._transform)}) -> {transformStr}";
+            if (node.Transform is not null)
+                transformStr = $"({string.Join(',', node.Transform)}) -> {transformStr}";
 
             node = node.Parent;
         }
@@ -68,6 +67,8 @@ public class MachineNodeBinary(int depth, bool[] state, int[]? transform = null)
         return newNode;
     }
 
+    public override int? GetHeuristic(bool[] target) => this.Depth;
+
 
     // Class-internal utility methods.
     private static bool[] ApplyTransform(int[] transform, bool[] currState) {
@@ -82,10 +83,10 @@ public class MachineNodeBinary(int depth, bool[] state, int[]? transform = null)
 }
 
 
-public class MachineNodeJoltage(int depth, int[] state, int[]? transform = null) : MachineNodeBase<int>(depth, state, transform) {
+public class MachineNodeJoltage(int depth, short[] state, int[]? transform = null) : MachineNodeBase<short>(depth, state, transform) {
     // External utility methods.
-    public override IMachineNode<int> AddChild(int[] transform) {
-        int[] newState = ApplyTransform(transform, this.State);
+    public override IMachineNode<short> AddChild(int[] transform) {
+        short[] newState = ApplyTransform(transform, this.State);
 
         MachineNodeJoltage newNode = new(this.Depth + 1, newState, transform) {
             Parent = this
@@ -95,10 +96,21 @@ public class MachineNodeJoltage(int depth, int[] state, int[]? transform = null)
         return newNode;
     }
 
+    public override int? GetHeuristic(short[] target) {
+        int priority = this.Depth + (this.State.Length - (this.Transform?.Length ?? 0));
+
+        for (int i = 0; i < this.State.Length; i++) {
+            if (this.State[i] > target[i]) return null;
+            priority += target[i] - this.State[i];
+        }
+
+        return priority;
+    }
+
 
     // Class-internal utility methods.
-    private static int[] ApplyTransform(int[] transform, int[] currState) {
-        int[] newState = new int[currState.Length];
+    private static short[] ApplyTransform(int[] transform, short[] currState) {
+        short[] newState = new short[currState.Length];
         currState.CopyTo(newState, 0);
 
         foreach (int i in transform) newState[i]++;
