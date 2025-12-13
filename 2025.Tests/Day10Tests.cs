@@ -14,11 +14,11 @@ public class Day10Tests {
         using StreamReader reader = new(stream);
 
         List<MachineSchematic> schematics = Files.LoadMachineSchematics(reader);
-        MachineStarter sut = new(6, 10000, true);
+        MachineWiringStarter sut = new(6, 10000, true);
 
 
         // Act.
-        long result = sut.ConfigureMachine(schematics);
+        long result = sut.Configure(schematics);
 
 
         // Assert.
@@ -35,11 +35,11 @@ public class Day10Tests {
         using StreamReader reader = new(stream);
 
         List<MachineSchematic> schematics = Files.LoadMachineSchematics(reader);
-        MachineStarter sut = new(20, 10000, true);
+        MachineJoltageStarter sut = new(true);
 
 
         // Act.
-        long result = sut.ConfigureJoltage(schematics);
+        long result = sut.Configure(schematics);
 
 
         // Assert.

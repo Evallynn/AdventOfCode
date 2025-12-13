@@ -3,19 +3,19 @@
 
 public class Day10 : IChallenge {
     // Constants.
-    private const string FILE_PATH = "data/Day10a.txt";
+    private const string FILE_PATH = "data/Day10.txt";
 
 
     // External utility methods.
     public void Run() {
         List<MachineSchematic> schematics = Files.LoadMachineSchematics(FILE_PATH);
 
-        MachineStarter starterA = new(10, 250000, true);
-        long totalMinSteps = starterA.ConfigureMachine(schematics);
+        IMachineStarter starterA = new MachineWiringStarter(10, 250000, false);
+        long totalMinSteps = starterA.Configure(schematics);
         Console.WriteLine($"Total minimum steps (start-up): {totalMinSteps}");
 
-        MachineStarter starterB = new(175, 30000000, true);
-        long totalJoltageSteps = starterB.ConfigureJoltage(schematics);
+        IMachineStarter starterB = new MachineJoltageStarter(true);
+        long totalJoltageSteps = starterB.Configure(schematics);
         Console.WriteLine($"Total minimum steps (joltage): {totalJoltageSteps}");
     }
 }
