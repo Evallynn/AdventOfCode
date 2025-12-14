@@ -1,10 +1,10 @@
 ﻿namespace Advent;
 
 
-public record RrefResult(
-    double[,] Rref,
-    List<int> PivotCols,
-    List<int> FreeCols
+public record Rref(
+    double[,] Value,
+    List<int> Pivots,
+    List<int> Free
 );
 
 
@@ -17,9 +17,9 @@ public class MachineJoltageStarter(bool _debug) : IMachineStarter {
     public long Configure(List<MachineSchematic> schematics) {
         long total = 0;
 
-        foreach (var schematic in schematics) {
+        foreach (MachineSchematic schematic in schematics) {
             long best = SolveMachine(schematic.Transforms, schematic.Joltages)
-                ?? throw new InvalidOperationException("No non-negative integer solution for a machine.");
+                ?? throw new InvalidOperationException($"No non-negative integer solution for [{string.Join(',', schematic.Joltages)}].");
 
             if (_debug)
                 Console.WriteLine($"Solution to [{string.Join(',', schematic.Joltages)}] found in {best} presses.");
@@ -42,13 +42,13 @@ public class MachineJoltageStarter(bool _debug) : IMachineStarter {
 
 
         // Reduce the set of equations down into their RREF form.
-        RrefResult? rref = SolveRref(buttonEffectMatrix, [..target]);
+        Rref? rref = SolveRref(buttonEffectMatrix, [..target]);
         if (rref is null) return null;
 
 
         // Find the upper bound for each button. It can't exceed the smallest target joltage
         // remaining it affacts, given any button presses that are already fixed by our RREF.
-        int[] upperBounds = new int[buttons.Count];
+        int[] maxPressesPerButton = new int[buttons.Count];
 
         for (int j = 0; j < buttons.Count; j++) {
             int upperBound = int.MaxValue;
@@ -59,73 +59,31 @@ public class MachineJoltageStarter(bool _debug) : IMachineStarter {
                 touchesAny = true;
             }
 
-            upperBounds[j] = touchesAny ? upperBound : 0;
+            maxPressesPerButton[j] = touchesAny ? upperBound : 0;
         }
 
 
         // Check if we have no free variables. If that's the case, there's only 
         // one solution so we can skip the heavy processing.
-        if (rref.FreeCols.Count == 0) {
+        if (rref.Free.Count == 0) {
             // Just read out the singular pivot value for each column.
             double[] presses = new double[buttons.Count];
 
-            for (int i = 0; i < rref.PivotCols.Count; i++) {
-                int p = rref.PivotCols[i];
-                presses[p] = rref.Rref[i, buttons.Count];
+            for (int i = 0; i < rref.Pivots.Count; i++) {
+                int p = rref.Pivots[i];
+                presses[p] = rref.Value[i, buttons.Count];
             }
 
-            return CheckAndSumSolution(presses, upperBounds);
+            return CheckAndSumSolution(presses, maxPressesPerButton);
         }
 
 
-        // 5) Free variables: brute-force them within upper bounds
-        long? best = null;
-
-        double eps = 1e-9;
-
-        void SearchFree(int freeIndex, double[] xPartial) {
-            if (freeIndex == rref.FreeCols.Count) {
-                // All free vars chosen: compute basic vars
-                var x = new double[buttons.Count];
-                Array.Copy(xPartial, x, buttons.Count);
-
-                for (int i = 0; i < rref.PivotCols.Count; i++) {
-                    int p = rref.PivotCols[i];
-                    double rhs = rref.Rref[i, buttons.Count];
-                    double sum = 0.0;
-
-                    foreach (int fCol in rref.FreeCols) {
-                        double coeff = rref.Rref[i, fCol];
-                        if (Math.Abs(coeff) > eps)
-                            sum += coeff * x[fCol];
-                    }
-
-                    x[p] = rhs - sum;
-                }
-
-                long? total = CheckAndSumSolution(x, upperBounds);
-                if (total is long val) {
-                    if (best is null || val < best.Value)
-                        best = val;
-                }
-                return;
-            }
-
-            int col = rref.FreeCols[freeIndex];
-            int ub = upperBounds[col];
-
-            for (int v = 0; v <= ub; v++) {
-                xPartial[col] = v;
-                SearchFree(freeIndex + 1, xPartial);
-            }
-        }
-
-        var xStart = new double[buttons.Count];
-        for (int j = 0; j < buttons.Count; j++) xStart[j] = 0.0;
-
-        SearchFree(0, xStart);
-
-        return best;
+        // Run depth first search against the remaining free values, within sensible bounds.
+        return SearchFreeButtonPresses(
+            depth: 0,
+            rref: rref,
+            maxPressesPerButton: maxPressesPerButton
+        );
     }
 
 
@@ -149,7 +107,7 @@ public class MachineJoltageStarter(bool _debug) : IMachineStarter {
         return sum;
     }
 
-    public static RrefResult? SolveRref(double[,] matrixToReduce, double[] target) {
+    public static Rref? SolveRref(double[,] matrixToReduce, double[] target) {
         // Store the matric x/y for later.
         int width = matrixToReduce.GetLength(0);
         int height = matrixToReduce.GetLength(1);
@@ -249,5 +207,55 @@ public class MachineJoltageStarter(bool _debug) : IMachineStarter {
 
         // Pass back the combined matric, pivot columns and free columns.
         return new(comboMatrix, pivotCols, freeCols);
+    }
+
+    private static long? SearchFreeButtonPresses(int depth, Rref rref, int[] maxPressesPerButton, double[]? pressesSoFar = null) {
+        // All free buttons have assigned values...
+        pressesSoFar ??= new double[maxPressesPerButton.Length];
+
+        if (depth == rref.Free.Count) {
+            int numButtons = maxPressesPerButton.Length;
+            double[] fullPresses = new double[numButtons];
+            Array.Copy(pressesSoFar, fullPresses, numButtons);
+
+            // Compute the pivot button values using the RREF rows.
+            for (int pivotRow = 0; pivotRow < rref.Pivots.Count; pivotRow++) {
+                int pivotButton = rref.Pivots[pivotRow];
+                double rhs = rref.Value[pivotRow, numButtons];
+                double sum = 0.0;
+
+                // Subtract the contribution from free buttons in this row.
+                foreach (int freeButton in rref.Free) {
+                    double coeff = rref.Value[pivotRow, freeButton];
+                    if (Math.Abs(coeff) > ERROR_MARGIN) {
+                        sum += coeff * fullPresses[freeButton];
+                    }
+                }
+
+                fullPresses[pivotButton] = rhs - sum;
+            }
+            
+            // Check if this full button assignment is valid and return its total presses (or null).
+            return CheckAndSumSolution(fullPresses, maxPressesPerButton);
+        }
+
+        // We still have at least one free button to assign.
+        int currentFreeButton = rref.Free[depth];
+        int upperBound = maxPressesPerButton[currentFreeButton];
+
+        long? bestTotalPresses = null;
+
+        for (int presses = 0; presses <= upperBound; presses++) {
+            pressesSoFar[currentFreeButton] = presses;
+
+            long? candidate = SearchFreeButtonPresses(depth + 1, rref, maxPressesPerButton, pressesSoFar);
+
+            if (candidate is long value) {
+                if (bestTotalPresses is null || value < bestTotalPresses.Value)
+                    bestTotalPresses = value;
+            }
+        }
+
+        return bestTotalPresses;
     }
 }
